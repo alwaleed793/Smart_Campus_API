@@ -17,19 +17,21 @@ The application follows a layered architecture to promote modularity and maintai
 This layer handles HTTP requests and defines API endpoints using JAX-RS annotations.
 
 Classes:
-- RoomResource  
-- SensorResource  
-- SensorReadingResource  
-- DiscoveryResource  
+
+* RoomResource
+* SensorResource
+* SensorReadingResource
+* DiscoveryResource
 
 ---
 
 ### Model Layer
 
 This layer defines the core entities of the system:
-- Room  
-- Sensor  
-- SensorReading  
+
+* Room
+* Sensor
+* SensorReading
 
 Each model is implemented as a POJO with constructors, getters, and setters.
 
@@ -51,15 +53,16 @@ This ensures safe concurrent access and prevents race conditions.
 ### Exception Handling Layer
 
 Custom exceptions and ExceptionMapper classes are implemented to:
-- Prevent exposure of internal server errors  
-- Return structured JSON responses  
-- Use appropriate HTTP status codes  
+
+* Prevent exposure of internal server errors
+* Return structured JSON responses
+* Use appropriate HTTP status codes
 
 ---
 
 ## Base URL
 
-http://localhost:8080/api/v1
+[http://localhost:8080/api/v1](http://localhost:8080/api/v1)
 
 ---
 
@@ -73,25 +76,25 @@ GET /api/v1
 
 ### Room Management
 
-GET /rooms  
-POST /rooms  
-GET /rooms/{roomId}  
-DELETE /rooms/{roomId}  
+GET /rooms
+POST /rooms
+GET /rooms/{roomId}
+DELETE /rooms/{roomId}
 
 ---
 
 ### Sensor Management
 
-GET /sensors  
-POST /sensors  
-GET /sensors?type=CO2  
+GET /sensors
+POST /sensors
+GET /sensors?type=CO2
 
 ---
 
 ### Sensor Readings
 
-GET /sensors/{sensorId}/readings  
-POST /sensors/{sensorId}/readings  
+GET /sensors/{sensorId}/readings
+POST /sensors/{sensorId}/readings
 
 ---
 
@@ -122,31 +125,21 @@ POST /sensors/{sensorId}/readings
 
 ---
 
-## Build the Project
+## Build and Run
 
-The project requires **Java** and  **Maven** .
+Build the project:
 
-Build the project using:
-
-```
+```bash
 mvn clean package
 ```
 
-## Run the Server
+Run the server:
 
-Start the API server using:
-
-```
+```bash
 mvn exec:java
 ```
 
-When the server starts it will display:
-
-```
-Server started at http://localhost:8080/api/v1
-```
-
-After that the API can be tested using Postman or curl
+---
 
 ## Sample curl Commands
 
@@ -187,10 +180,10 @@ The API uses ExceptionMapper classes to return structured error responses.
 
 Scenarios:
 
-- Room deletion with existing sensors → 409 Conflict  
-- Invalid room reference → 422 Unprocessable Entity  
-- Sensor in maintenance → 403 Forbidden  
-- Unexpected errors → 500 Internal Server Error  
+* Room deletion with existing sensors → 409 Conflict
+* Invalid room reference → 422 Unprocessable Entity
+* Sensor in maintenance → 403 Forbidden
+* Unexpected errors → 500 Internal Server Error
 
 Example response:
 
@@ -205,7 +198,6 @@ Example response:
 ## Part 1 – Resource Lifecycle
 
 JAX-RS follows a per-request lifecycle, meaning a new resource instance is created for each incoming request.
-
 To manage shared data, a separate DataStore is used. Thread safety is ensured using ConcurrentHashMap to avoid race conditions in concurrent environments.
 
 ---
@@ -264,6 +256,54 @@ A global exception mapper prevents this by returning generic error responses.
 
 ---
 
+## Report Answers
+
+### Part 1 
+
+**Resource Lifecycle (Expanded):**
+JAX-RS manages resources using a per-request lifecycle, meaning a new instance is created for each HTTP request. This design ensures thread safety because instances are not shared across threads. However, it also means instance variables cannot be used for persistent or shared data. Instead, shared data must be stored externally (e.g., in a DataStore using ConcurrentHashMap) to maintain consistency across requests.
+
+**HATEOAS (Expanded):**
+HATEOAS (Hypermedia as the Engine of Application State) allows APIs to include navigational links in responses. This enables clients to dynamically discover available actions without relying on external documentation. It improves usability, flexibility, and reduces tight coupling between client and server.
+
+---
+
+### Part 2 
+
+**IDs vs Full Objects (Expanded):**
+Returning IDs results in smaller payloads and better performance but requires additional API calls to retrieve related data. Returning full objects increases payload size but provides complete information in a single response, improving usability. This API prioritizes usability by returning full objects.
+
+**DELETE Idempotency (Expanded):**
+DELETE operations are idempotent because performing the same request multiple times results in the same system state. The first request deletes the resource, while subsequent requests do not change anything further, even if they return a different response (e.g., 404).
+
+---
+
+### Part 3 
+
+**@Consumes(JSON) Behaviour:**
+When @Consumes(MediaType.APPLICATION_JSON) is used, the API only accepts JSON input. If a client sends data in another format (e.g., text/plain or application/xml), JAX-RS automatically throws a NotSupportedException and returns a 415 Unsupported Media Type response.
+
+**QueryParam vs PathParam (Expanded):**
+Query parameters are better suited for filtering because they are optional and flexible, allowing multiple filtering conditions. Path parameters are used for identifying specific resources and are not suitable for dynamic filtering scenarios.
+
+---
+
+### Part 4 
+**Sub-Resource Locator Benefits (Expanded):**
+The sub-resource locator pattern improves modularity by delegating nested resource handling to separate classes. This avoids large monolithic controllers, improves readability, and enhances scalability and maintainability in large APIs.
+
+---
+
+### Part 5 
+
+**HTTP 422 Justification (Expanded):**
+HTTP 422 (Unprocessable Entity) is more appropriate when a request is syntactically valid but semantically incorrect, such as referencing a non-existent entity within a valid JSON payload.
+
+**Security Risks of Stack Traces (Expanded):**
+Exposing stack traces can reveal sensitive internal details such as class names, package structures, file paths, and framework information. Attackers can use this information to identify vulnerabilities and exploit the system. To prevent this, the API uses a global ExceptionMapper to return generic error messages and avoid leaking internal implementation details.
+
+---
+
 ## Conclusion
 
 This project demonstrates the development of a RESTful API using JAX-RS to effectively manage rooms, sensors, and sensor readings within a smart campus environment.
@@ -271,4 +311,3 @@ This project demonstrates the development of a RESTful API using JAX-RS to effec
 The system adheres to core REST principles, incorporating a clear resource hierarchy, support for nested endpoints, and robust exception handling mechanisms. The use of in-memory storage combined with concurrent data structures ensures reliable and thread-safe handling of multiple client requests.
 
 Overall, the implementation provides a functional and extensible backend service, forming a solid foundation for future enhancements in a real-world smart campus system.
-#
